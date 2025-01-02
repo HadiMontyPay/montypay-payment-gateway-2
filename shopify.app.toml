@@ -1,0 +1,32 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "130140bde0eec932143e4d6927e5a9dd"
+application_url = "https://beverage-sink-status-cups.trycloudflare.com"
+embedded = false
+name = "MontyPay Payment Gateway"
+handle = "montypay-payment-gateway"
+
+[webhooks]
+api_version = "2024-10"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = [
+  "https://beverage-sink-status-cups.trycloudflare.com/auth/callback",
+  "https://beverage-sink-status-cups.trycloudflare.com/auth/shopify/callback",
+  "https://beverage-sink-status-cups.trycloudflare.com/api/auth/callback"
+]
+
+[pos]
+embedded = false
+
+[build]
+dev_store_url = "monty-pay-dev.myshopify.com"
+automatically_update_urls_on_dev = true
