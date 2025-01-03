@@ -3,12 +3,8 @@
 client_id = "166e235980e297e259b0fc21d0cc3dfd"
 name = "Montypay payment gateway"
 handle = "montypay-payment-gateway"
-application_url = "https://jazz-behalf-is-blake.trycloudflare.com"
+application_url = "https://baker-retain-still-honey.trycloudflare.com"
 embedded = true
-
-[build]
-dev_store_url = "monty-pay-dev.myshopify.com"
-automatically_update_urls_on_dev = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
@@ -16,9 +12,9 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://jazz-behalf-is-blake.trycloudflare.com/auth/callback",
-  "https://jazz-behalf-is-blake.trycloudflare.com/auth/shopify/callback",
-  "https://jazz-behalf-is-blake.trycloudflare.com/api/auth/callback"
+  "https://baker-retain-still-honey.trycloudflare.com/auth/callback",
+  "https://baker-retain-still-honey.trycloudflare.com/auth/shopify/callback",
+  "https://baker-retain-still-honey.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
@@ -26,3 +22,7 @@ api_version = "2025-01"
 
 [pos]
 embedded = false
+
+[build]
+dev_store_url = "monty-pay-dev.myshopify.com"
+automatically_update_urls_on_dev = true

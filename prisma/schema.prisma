@@ -9,15 +9,16 @@ generator client {
 // enough when changing adapters.
 // See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Session {
-  id            String    @id
+  id            String         @id
   shop          String
   state         String
-  isOnline      Boolean   @default(false)
+  isOnline      Boolean        @default(false)
   scope         String?
   expires       DateTime?
   accessToken   String
@@ -25,8 +26,73 @@ model Session {
   firstName     String?
   lastName      String?
   email         String?
-  accountOwner  Boolean   @default(false)
+  accountOwner  Boolean        @default(false)
   locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+  collaborator  Boolean?       @default(false)
+  emailVerified Boolean?       @default(false)
+  Configuration Configuration?
+}
+
+model Configuration {
+  id          Int     @id @default(autoincrement())
+  session     Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   String  @unique
+  shop        String  @unique
+  accountName String?
+  ready       Boolean @default(true)
+  apiVersion  String  @default("unstable")
+  merchantKey String
+  merchantPassword String
+  testMode Boolean @default(true)
+  @@index([sessionId])
+}
+
+model PaymentSession {
+  id            String           @id
+  gid           String
+  group         String
+  amount        Decimal
+  test          Boolean
+  currency      String
+  kind          String
+  shop          String
+  paymentMethod String
+  customer      String @db.Text
+  cancelUrl     String?
+  refunds       RefundSession[]
+  captures      CaptureSession[]
+  void          VoidSession?
+  proposedAt    DateTime
+  status        String?
+}
+
+model RefundSession {
+  id         String         @id
+  gid        String
+  payment    PaymentSession @relation(fields: [paymentId], references: [id])
+  paymentId  String
+  amount     Decimal
+  currency   String
+  proposedAt DateTime
+  status     String?
+}
+
+model CaptureSession {
+  id         String         @id
+  gid        String
+  payment    PaymentSession @relation(fields: [paymentId], references: [id])
+  paymentId  String
+  amount     Decimal
+  currency   String
+  proposedAt DateTime
+  status     String?
+}
+
+model VoidSession {
+  id         String         @id
+  gid        String
+  payment    PaymentSession @relation(fields: [paymentId], references: [id])
+  paymentId  String         @unique
+  proposedAt DateTime
+  status     String?
 }
