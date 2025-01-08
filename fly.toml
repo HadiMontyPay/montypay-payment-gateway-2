@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for montypay on 2025-01-02T15:20:41+02:00
+# fly.toml app configuration file generated for montypaylive on 2025-01-08T15:16:58+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'montypay'
+app = 'montypaylive'
 primary_region = 'arn'
 
 [build]
@@ -11,8 +11,8 @@ primary_region = 'arn'
 [env]
   PORT = '3000'
   SCOPES = ''
-  SHOPIFY_API_KEY = '586cabac24cf4504423a951c7ad7a50d'
-  SHOPIFY_APP_URL = 'https://montypay.fly.dev'
+  SHOPIFY_API_KEY = '95516f271f63cbefada64c8a3302c1ca'
+  SHOPIFY_APP_URL = 'https://montypaylive.fly.dev'
 
 [http_service]
   internal_port = 3000
