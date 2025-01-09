@@ -3,8 +3,8 @@
 client_id = "95516f271f63cbefada64c8a3302c1ca"
 name = "MontyPay Live"
 handle = "montypay-live"
-application_url = "https://montypaylive.fly.dev"
-embedded = false
+application_url = "https://montypaylive.fly.dev/"
+embedded = true
 
 [build]
 automatically_update_urls_on_dev = false
@@ -16,9 +16,7 @@ include_config_on_deploy = true
 scopes = ""
 
 [auth]
-redirect_urls = [
-  "https://montypaylive.fly.dev/auth/callback"
-  ]
+redirect_urls = [ "https://montypaylive.fly.dev/auth/callback" ]
 
 [webhooks]
 api_version = "2025-01"

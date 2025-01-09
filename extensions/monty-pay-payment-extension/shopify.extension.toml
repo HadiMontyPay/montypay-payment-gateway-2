@@ -9,8 +9,8 @@ type = "payments_extension"
 
 
 merchant_label = "Offsite Payments App Extension"
-payment_session_url = "https://montypay.fly.dev/app/payment_session"
-refund_session_url = "https://montypay.fly.dev/app/refund_session"
+payment_session_url = "https://montypaylive.fly.dev/app/payment_session"
+refund_session_url = "https://montypaylive.fly.dev/app/refund_session"
 #capture_session_url = ""
 #void_session_url = ""
 supports_oversell_protection = false
