@@ -8,7 +8,7 @@ handle = "montypay-payment-extension"
 type = "payments_extension"
 
 
-merchant_label = "Offsite Payments App Extension"
+merchant_label = "MontyPay Payments"
 payment_session_url = "https://montypaylive.fly.dev/app/payment_session"
 refund_session_url = "https://montypaylive.fly.dev/app/refund_session"
 #capture_session_url = ""

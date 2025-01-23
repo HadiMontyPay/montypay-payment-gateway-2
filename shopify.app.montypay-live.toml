@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "95516f271f63cbefada64c8a3302c1ca"
-name = "MontyPay Live"
+name = "MontyPay Payment Gateway"
 handle = "montypay-live"
 application_url = "https://montypaylive.fly.dev/"
 embedded = true
@@ -13,7 +13,7 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "write_payment_gateways,write_payment_sessions"
 
 [auth]
 redirect_urls = [ "https://montypaylive.fly.dev/auth/callback" ]

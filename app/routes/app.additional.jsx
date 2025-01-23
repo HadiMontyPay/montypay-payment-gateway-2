@@ -75,17 +75,21 @@ export const action = async ({ request }) => {
     const configuration = await getOrCreateConfiguration(config.sessionId, config);
     const client = new PaymentsAppsClient(session.shop, session.accessToken);
     const response = await client.paymentsAppConfigure(
-      configuration?.merchantKey,
+      configuration?.merchantKey, true
     );
     const userErrors = response?.userErrors || [];
 
     if (userErrors.length > 0) return json({ errors: userErrors });
+
+    // https://${session.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings
+    // window.location = `https://${session.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`;
+
     return json({ raiseBanner: true, errors: userErrors });
   } else {
     const configuration = await getOrCreateConfiguration(session.id, config);
     const client = new PaymentsAppsClient(session.shop, session.accessToken);
     const response = await client.paymentsAppConfigure(
-      configuration?.merchantKey,
+      configuration?.merchantKey, true
     );
     const userErrors = response?.userErrors || [];
 

@@ -10,7 +10,7 @@ primary_region = 'arn'
 
 [env]
   PORT = '3000'
-  SCOPES = ''
+  SCOPES = 'write_payment_gateways,write_payment_sessions'
   SHOPIFY_API_KEY = '95516f271f63cbefada64c8a3302c1ca'
   SHOPIFY_APP_URL = 'https://montypaylive.fly.dev'
 
