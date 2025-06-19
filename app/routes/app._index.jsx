@@ -21,7 +21,7 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
-  const url = `https://montypaylive.fly.dev/configurationPage?domain=${session.shop}`;
+  const url = `https://montypaylive.fly.dev/?domain=${session.shop}`;
 
   return json({ url });
 };

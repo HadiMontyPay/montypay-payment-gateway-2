@@ -19,7 +19,7 @@ export default function App() {
   return (
     <>
       <div className={styles.index}>
-        <div class={styles.gradient}></div>
+        <div className={styles.gradient}></div>
         <div className={styles.content}>
           <h1 className={styles.heading}>MontyPay Payment Gateway</h1>
           {/* <p className={styles.text}>
