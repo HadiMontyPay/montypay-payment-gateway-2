@@ -3,7 +3,7 @@
 client_id = "95516f271f63cbefada64c8a3302c1ca"
 name = "MontyPay Payment Gateway"
 handle = "montypay-live"
-application_url = "https://montypaylive.fly.dev/configurationPage"
+application_url = "https://montypaylive.fly.dev"
 embedded = false
 
 [build]
@@ -16,8 +16,7 @@ include_config_on_deploy = true
 scopes = "write_payment_gateways,write_payment_sessions"
 
 [auth]
-# redirect_urls = [ "https://montypaylive.fly.dev/auth/callback" ]
-redirect_urls = [ "https://montypaylive.fly.dev/configurationPage" ]
+redirect_urls = [ "https://montypaylive.fly.dev/auth/callback" ]
 
 [webhooks]
 api_version = "2025-01"
