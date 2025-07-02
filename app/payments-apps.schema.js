@@ -1,6 +1,6 @@
 /**
-* This "schema" contains the mutations consumed by the client in payments-apps.graphql
-*/
+ * This "schema" contains the mutations consumed by the client in payments-apps.graphql
+ */
 const paymentsAppConfigure = `
   mutation PaymentsAppConfigure($externalHandle: String, $ready: Boolean!) {
     paymentsAppConfigure(externalHandle: $externalHandle, ready: $ready) {
@@ -100,7 +100,7 @@ const paymentSessionPending = `
       }
     }
   }
-`
+`;
 
 const refundSessionResolve = `
   mutation RefundSessionResolve($id: ID!) {
@@ -221,7 +221,18 @@ const voidSessionReject = `
     }
   }
 `;
-
+const paymentSessionConfirm = `
+mutation paymentSessionConfirm($id: ID!) {
+  paymentSessionConfirm(id: $id) {
+    paymentSession {
+      # PaymentSession fields
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}`;
 export default {
   paymentsAppConfigure,
   paymentSessionResolve,
@@ -233,4 +244,5 @@ export default {
   voidSessionResolve,
   voidSessionReject,
   paymentSessionPending,
+  paymentSessionConfirm,
 };

@@ -76,24 +76,17 @@ export const action = async ({ request }) => {
     );
     const client = new PaymentsAppsClient(session.shop, session.accessToken);
     const response = await client.paymentsAppConfigure(
-      configuration?.merchantKey,
-      configuration.ready,
+      config.merchantKey,
+      true,
     );
     const userErrors = response?.userErrors || [];
 
     if (userErrors.length > 0)
       return json({ raiseBanner: true, errors: userErrors });
 
-    console.log(
-      `https://${configuration.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`,
-    );
-    // https://monty-pay-dev.myshopify.com/services/payments_partners/gateways/95516f271f63cbefada64c8a3302c1ca/settings
-    // https://${session.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings
     return redirect(
       `https://${configuration.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`,
     );
-    // window.location.href = `https://${configuration.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`;
-    // return json({ raiseBanner: true, errors: userErrors });
   } else {
     const configuration = await getOrCreateConfiguration(session.id, config);
     const client = new PaymentsAppsClient(session.shop, session.accessToken);
@@ -105,10 +98,6 @@ export const action = async ({ request }) => {
 
     if (userErrors.length > 0)
       return json({ raiseBanner: true, errors: userErrors });
-
-    console.log(
-      `https://${configuration.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`,
-    );
     return redirect(
       `https://${configuration.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`,
     );

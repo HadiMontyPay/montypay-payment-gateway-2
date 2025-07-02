@@ -1,6 +1,18 @@
 import { json, redirect } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
-import { Button, Checkbox, FormLayout, TextField } from "@shopify/polaris";
+import {
+  Button,
+  Checkbox,
+  FormLayout,
+  TextField,
+  BlockStack,
+  Card,
+  InlineStack,
+  Layout,
+  Link,
+  Page,
+  Text,
+} from "@shopify/polaris";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { useState } from "react";
 import styles from "./_index/styles.module.css";
@@ -13,6 +25,7 @@ import {
 } from "../payments.repository";
 
 export const loader = async ({ request }) => {
+  // console.log("object");
   const url = new URL(request.url);
   const queryParams = Object.fromEntries(url.searchParams.entries());
 
@@ -22,8 +35,9 @@ export const loader = async ({ request }) => {
   const session = await getSessionByShop(
     queryParams.shop || queryParams.domain,
   );
+  const apiKey = process.env.SHOPIFY_API_KEY;
 
-  return json({ config: config, session: session });
+  return json({ shopDomain: session.shop, apiKey: apiKey, config: config });
 };
 
 const verifyTestMode = async (tst) => {
@@ -43,17 +57,19 @@ export const action = async ({ request }) => {
   const config = await getConfigurationByShop(
     queryParams.shop || queryParams.domain,
   );
-  const session = await getSessionByShop(config.shop);
+  const session = await getSessionByShop(
+    queryParams.shop || queryParams.domain,
+  );
   console.log("Session:", session);
 
   const conf = {
-    shop: config.shop,
+    shop: queryParams.shop || queryParams.domain,
     merchantKey: formData.get("merchantKey"),
     merchantPassword: formData.get("merchantPass"),
     testMode: await verifyTestMode(formData.get("testMode")),
-    sessionId: config.sessionId,
+    sessionId: session.id,
   };
-  const ifExists = await getOrCreateConfiguration(config.sessionId, conf);
+  const ifExists = await getOrCreateConfiguration(conf.sessionId, conf);
   if (!ifExists) {
     const configuration = await getOrCreateConfiguration(conf.sessionId, conf);
     const client = new PaymentsAppsClient(session.shop, session.accessToken);
@@ -77,11 +93,8 @@ export const action = async ({ request }) => {
     // window.location.href = `https://${configuration.shop}/services/payments_partners/gateways/${process.env.SHOPIFY_API_KEY}/settings`;
     // return json({ raiseBanner: true, errors: userErrors });
   } else {
-    const configuration = await getOrCreateConfiguration(
-      config.sessionId,
-      conf,
-    );
-    const client = new PaymentsAppsClient(config.shop, session.accessToken);
+    const configuration = await getOrCreateConfiguration(conf.sessionId, conf);
+    const client = new PaymentsAppsClient(conf.shop, session.accessToken);
     const response = await client.paymentsAppConfigure(
       configuration?.merchantKey,
       configuration.ready,
@@ -125,7 +138,7 @@ export default function App() {
                 className={styles.input}
                 type="text"
                 name="merchantKey"
-                onChange={(change) => setMerchantKey(change)}
+                onChange={(e) => setMerchantKey(e.target.value)}
                 value={merchantKey}
               />
             </label>
@@ -135,7 +148,7 @@ export default function App() {
                 className={styles.input}
                 type="password"
                 name="merchantPass"
-                onChange={(change) => setMerchantPass(change)}
+                onChange={(e) => setMerchantPass(e.target.value)}
                 value={merchantPass}
               />
             </label>
@@ -153,6 +166,7 @@ export default function App() {
               <span className={styles.lbl}>Test Mode</span>
               <input
                 className={styles.input}
+                style={{ width: "13px" }}
                 type="checkbox"
                 name="testMode"
                 checked={testMode}

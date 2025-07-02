@@ -1,0 +1,41 @@
+{
+  " id": "rMgYYjaGxi9gMoURWxEVth1n4",
+  " gid": "gid://shopify/PaymentSession/rMgYYjaGxi9gMoURWxEVth1n4",
+  " group": "8XEIcGxbEKDS2USFe7VpcDmr3WCm6asoOoJkLu69Rrc=",
+  " amount": 749.95,
+  " test": true,
+  " currency": "GBP",
+  " kind": "sale",
+  " shop": "monty-pay-dev.myshopify.com",
+  " paymentMethod": {
+    "type": "offsite",
+    "data": {
+      "cancel_url": "https://monty-pay-dev.myshopify.com/checkouts/cn/hWMzy3ZhUVaj0RL8JiVvLtdj/processing"
+    }
+  },
+  " customer": {
+    "billing_address": {
+      "given_name": "Fadi",
+      "family_name": "Monty",
+      "line1": "Hamra Street",
+      "city": "Beirut",
+      "postal_code": "EC4V 4EG",
+      "province": "England",
+      "country_code": "GB"
+    },
+    "shipping_address": {
+      "given_name": "Fadi",
+      "family_name": "Monty",
+      "line1": "Hamra Street",
+      "city": "Beirut",
+      "postal_code": "EC4V 4EG",
+      "province": "England",
+      "country_code": "GB"
+    },
+    "email": "fadi.ajami@montypay.com",
+    "locale": "en-GB"
+  },
+  " cancelUrl": "https://monty-pay-dev.myshopify.com/checkouts/cn/hWMzy3ZhUVaj0RL8JiVvLtdj/processing",
+  " proposedAt": "2025-06-27T12:20:06.000Z",
+  " status": null
+}

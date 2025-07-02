@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { createPaymentSession, getConfiguration, getPaymentSession } from "../payments.repository";
+import {
+  createPaymentSession,
+  getConfiguration,
+  getPaymentSession,
+} from "../payments.repository";
 import CryptoJS from "crypto-js";
 import prisma from "../db";
 // import { redirect } from "@remix-run/react";
@@ -10,33 +14,33 @@ import prisma from "../db";
  */
 export const action = async ({ request }) => {
   // try{
-    const requestBody = await request.json();
+  const requestBody = await request.json();
 
-    const shopDomain = request.headers.get("shopify-shop-domain");
+  const shopDomain = request.headers.get("shopify-shop-domain");
 
-    const paymentSession = await createPaymentSession(
-      createParams(requestBody, shopDomain),
-    );
-    // this is a test
+  const paymentSession = await createPaymentSession(
+    createParams(requestBody, shopDomain),
+  );
+  // this is a test
 
-    if (!paymentSession)
-      throw new Response("A PaymentSession couldn't be created.", {
-        status: 500,
-      });
+  if (!paymentSession)
+    throw new Response("A PaymentSession couldn't be created.", {
+      status: 500,
+    });
 
-    const result =  await buildRedirectUrl(requestBody, paymentSession);
+  const result = await buildRedirectUrl(requestBody, paymentSession);
 
-    // Check refund result
-    if (result.status === "success") {
-      return { redirect_url: result.data.redirect_url };
-    }
+  // Check refund result
+  if (result.status === "success") {
+    return { redirect_url: result.data.redirect_url };
+  }
 
-    throw new Response(result.message || "SALE operation failed.", { status: 500 });
+  throw new Response(result.message || "SALE operation failed.", {
+    status: 500,
+  });
 
-
-    // return result.data.redirect_url;
-    // return { redirect_url: await buildRedirectUrl(requestBody, paymentSession) };
-
+  // return result.data.redirect_url;
+  // return { redirect_url: await buildRedirectUrl(requestBody, paymentSession) };
 
   // } catch (result) {
   //   // Handle unexpected errors
@@ -85,7 +89,11 @@ const buildRedirectUrl = async (request, paymentSession) => {
     });
 
     if (!merchantInfo) {
-      return { status: "error", message: "Configuration not found", data: null };
+      return {
+        status: "error",
+        message: "Configuration not found",
+        data: null,
+      };
     }
 
     let merchant_key = merchantInfo.merchantKey;
@@ -104,13 +112,14 @@ const buildRedirectUrl = async (request, paymentSession) => {
 
     var hash = CryptoJS.SHA1(CryptoJS.MD5(to_md5.toUpperCase()).toString());
     var result = CryptoJS.enc.Hex.stringify(hash);
-
+    // console.log("request.payment_method.data:", request.payment_method.data);
+    // console.log("paymentSession:", paymentSession);
     const todoObject = {
       // merchant_key: merchantInfo.merchantKey,
       merchant_key: merchant_key,
       operation: "purchase",
-      cancel_url: request.payment_method.data.cancel_url,
-      success_url: "https://merchantapp.montypay.com/paysuccess",
+      cancel_url: paymentSession.cancelUrl,
+      success_url: "https://montypaylive.fly.dev/callback",
       hash: result,
       order: {
         description: request.kind,
@@ -127,19 +136,27 @@ const buildRedirectUrl = async (request, paymentSession) => {
       },
     };
 
-    const response = await fetch("https://checkout.montypay.com/api/v1/session", {
-      method: "POST",
-      body: JSON.stringify(todoObject),
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await fetch(
+      "https://checkout.montypay.com/api/v1/session",
+      {
+        method: "POST",
+        body: JSON.stringify(todoObject),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
     const SaleResult = await response.json();
-
-    console.log(SaleResult)
 
     // Handle refund response
     if (SaleResult.errors) {
-      const saleErrorMessage = SaleResult.errors[0]?.error_message || SaleResult.error_message || "Unknown sale error";
-      return { status: "error", message: saleErrorMessage, data: SaleResult.errors };
+      const saleErrorMessage =
+        SaleResult.errors[0]?.error_message ||
+        SaleResult.error_message ||
+        "Unknown sale error";
+      return {
+        status: "error",
+        message: saleErrorMessage,
+        data: SaleResult.errors,
+      };
     }
 
     return { status: "success", message: "Sale success", data: SaleResult };
@@ -152,11 +169,13 @@ const buildRedirectUrl = async (request, paymentSession) => {
     // return jsonResponse.redirect_url;
 
     // return jsonResponse;
-
-
   } catch (error) {
     // Catch any unexpected errors
-    return { status: "error", message: "An unexpected error occurred", data: error.message };
+    return {
+      status: "error",
+      message: "An unexpected error occurred",
+      data: error.message,
+    };
   }
   // return `${request.url.slice(0, request.url.lastIndexOf("/"))}/payment_simulator/${id}`;
 };

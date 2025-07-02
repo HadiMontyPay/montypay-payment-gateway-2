@@ -7,7 +7,6 @@
   height: 100vh;
   width: 100%;
   text-align: center;
-  /* padding: 1rem; */
   position: absolute;
   top: 0;
   left: 0;
@@ -67,10 +66,14 @@
 }
 
 .content {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 2rem;
   z-index: 1;
   color: white;
+  width: 100%;
 }
 
 .form {
@@ -80,7 +83,7 @@
   flex-direction: column;
   margin: 0 auto;
   gap: 1rem;
-  /* min-width: 50vw;q */
+  width: 50%;
   /* From https://css.glass */
   background: rgba(255, 255, 255, 0.22);
   border-radius: 16px;
@@ -111,20 +114,22 @@
 
 .label {
   display: grid;
-  gap: 0.2rem;
-  /* min-width: 100%; */
+  gap: 0.5rem;
+  width: 100%;
   text-align: left;
   font-size: 1rem;
 }
 
 .lbl {
   font-size: 1rem;
+  width: 100%;
 }
 
 .input {
   padding: 0.5rem 1rem;
   border-radius: 8px;
   border: none;
+  width: calc(100% - 2rem);
 }
 
 .button {
@@ -136,6 +141,7 @@
   width: 100%;
   border: none;
   font-size: 1rem;
+  margin: 0;
 }
 .button:hover {
   background-color: white;
@@ -156,12 +162,8 @@
   text-align: left;
 }
 
-@media only screen and (max-width: 50rem) {
-  .list {
-    display: block;
-  }
-
-  .list > li {
-    padding-bottom: 1rem;
+@media screen and (max-width: 426px) {
+  .form {
+    width: 70%;
   }
 }

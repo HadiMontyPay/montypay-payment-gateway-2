@@ -7,7 +7,7 @@ import {
   updateVoidSessionStatus,
   RESOLVE,
   REJECT,
-  PENDING
+  PENDING,
 } from "./payments.repository";
 
 /**
@@ -36,9 +36,22 @@ export default class PaymentsAppsClient {
    * @returns the response body from the Shopify Payments Apps API
    */
   async resolveSession({ id, gid }) {
-    const response = await this.#perform(schema[this.resolveMutation], { id: gid });
-    const responseData = response[this.resolveMutation]
-    if (responseData?.userErrors?.length === 0) await this.update?.(id, RESOLVE);
+    if (!gid) {
+      throw new Error("Missing required GID for session resolution");
+    }
+    const response = await this.#perform(schema[this.resolveMutation], {
+      id: gid,
+    });
+
+    if (!response) {
+      throw new Error(
+        `GraphQL request failed for shop: ${this.shop}, mutation: ${this.resolveMutation}`,
+      );
+    }
+
+    const responseData = response[this.resolveMutation];
+    if (responseData?.userErrors?.length === 0)
+      await this.update?.(id, RESOLVE);
 
     return responseData;
   }
@@ -53,15 +66,14 @@ export default class PaymentsAppsClient {
       id: gid,
       reason: {
         code: "PROCESSING_ERROR",
-        merchantMessage: "The session was rejected."
-      }
-    })
-    const responseData = response[this.rejectMutation]
+        merchantMessage: "The session was rejected.",
+      },
+    });
+    const responseData = response[this.rejectMutation];
     if (responseData?.userErrors?.length === 0) await this.update?.(id, REJECT);
 
     return responseData;
   }
-
 
   /**
    * Generic session pending function
@@ -69,7 +81,8 @@ export default class PaymentsAppsClient {
    * @returns the response body from the Shopify Payments Apps API
    */
   async pendSession({ id, gid }) {
-    if (this.type !== PAYMENT) throw new Error("Cannot pend a session for this client");
+    if (this.type !== PAYMENT)
+      throw new Error("Cannot pend a session for this client");
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -77,10 +90,11 @@ export default class PaymentsAppsClient {
     const response = await this.#perform(schema[this.pendingMutation], {
       id: gid,
       pendingExpiresAt: tomorrow.toISOString(),
-      reason: "PARTNER_ACTION_REQUIRED"
+      reason: "PARTNER_ACTION_REQUIRED",
     });
     const responseData = response[this.pendingMutation];
-    if (responseData?.userErrors?.length === 0) await this.update?.(id, PENDING);
+    if (responseData?.userErrors?.length === 0)
+      await this.update?.(id, PENDING);
 
     return responseData;
   }
@@ -92,30 +106,38 @@ export default class PaymentsAppsClient {
    * @returns
    */
   async #perform(query, variables) {
-    const apiVersion = "unstable"
+    const apiVersion = "unstable";
 
-    const response = await fetch(`https://${this.shop}/payments_apps/api/${apiVersion}/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Access-Token': this.accessToken
+    const response = await fetch(
+      `https://${this.shop}/payments_apps/api/${apiVersion}/graphql.json`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token": this.accessToken,
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
       },
-      body: JSON.stringify({
-        query,
-        variables
-      })
-    })
-    console.log(`[GraphQL] Making request for shop: "${this.shop}", api: "${apiVersion}"`)
+    );
+    console.log(
+      `[GraphQL] Making request for shop: "${this.shop}", api: "${apiVersion}"`,
+    );
 
     const responseBody = await response.json();
     console.log(`[GraphQL] response: ${JSON.stringify(responseBody)}`);
 
-    return response.ok ? responseBody.data : null
+    return response.ok ? responseBody.data : null;
   }
 
   async paymentsAppConfigure(externalHandle, ready) {
-    const response = await this.#perform(schema.paymentsAppConfigure, { externalHandle, ready })
-    return response?.paymentsAppConfigure
+    const response = await this.#perform(schema.paymentsAppConfigure, {
+      externalHandle,
+      ready,
+    });
+    return response?.paymentsAppConfigure;
   }
 
   /**
@@ -124,33 +146,33 @@ export default class PaymentsAppsClient {
    * @returns
    */
   dependencyInjector(type) {
-    switch(type) {
+    switch (type) {
       case PAYMENT:
-        this.resolveMutation = "paymentSessionResolve"
-        this.rejectMutation = "paymentSessionReject"
-        this.pendingMutation = "paymentSessionPending"
-        this.update = updatePaymentSessionStatus
+        this.resolveMutation = "paymentSessionResolve";
+        this.rejectMutation = "paymentSessionReject";
+        this.pendingMutation = "paymentSessionPending";
+        this.update = updatePaymentSessionStatus;
         break;
       case REFUND:
-        this.resolveMutation = "refundSessionResolve"
-        this.rejectMutation = "refundSessionReject"
-        this.update = updateRefundSessionStatus
+        this.resolveMutation = "refundSessionResolve";
+        this.rejectMutation = "refundSessionReject";
+        this.update = updateRefundSessionStatus;
         break;
       case CAPTURE:
-        this.resolveMutation = "captureSessionResolve"
-        this.rejectMutation = "captureSessionReject"
-        this.update = updateCaptureSessionStatus
+        this.resolveMutation = "captureSessionResolve";
+        this.rejectMutation = "captureSessionReject";
+        this.update = updateCaptureSessionStatus;
         break;
       case VOID:
-        this.resolveMutation = "voidSessionResolve"
-        this.rejectMutation = "voidSessionReject"
-        this.update = updateVoidSessionStatus
+        this.resolveMutation = "voidSessionResolve";
+        this.rejectMutation = "voidSessionReject";
+        this.update = updateVoidSessionStatus;
         break;
     }
   }
 }
 
-export const PAYMENT = "payment"
-export const REFUND = "refund"
-export const CAPTURE = "capture"
-export const VOID = "void"
+export const PAYMENT = "payment";
+export const REFUND = "refund";
+export const CAPTURE = "capture";
+export const VOID = "void";

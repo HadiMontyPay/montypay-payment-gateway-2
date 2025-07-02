@@ -2,9 +2,9 @@
 
 client_id = "95516f271f63cbefada64c8a3302c1ca"
 name = "MontyPay Payment Gateway"
-handle = "montypay-live"
-application_url = "https://montypaylive.fly.dev"
-embedded = false
+handle = "montypay-payment-gateway"
+application_url = "https://montypaylive.fly.dev/"
+embedded = true
 
 [build]
 automatically_update_urls_on_dev = false
@@ -16,10 +16,18 @@ include_config_on_deploy = true
 scopes = "write_payment_gateways,write_payment_sessions"
 
 [auth]
-redirect_urls = [ "https://montypaylive.fly.dev/auth/callback" ]
+redirect_urls = [
+  "https://montypaylive.fly.dev/auth/callback",
+  "https://montypaylive.fly.dev/auth/shopify/callback",
+  "https://montypaylive.fly.dev/api/auth/callback"
+]
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2024-04"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstall" ]
+  uri = "https://montypaylive.fly.dev/webhooks/app/uninstalled"
 
 [pos]
 embedded = false

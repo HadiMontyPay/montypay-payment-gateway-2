@@ -21,7 +21,7 @@ export const loader = async ({ request }) => {
 
 export const action = async ({ request }) => {
   const { session } = await authenticate.admin(request);
-  const url = `https://montypaylive.fly.dev/?domain=${session.shop}`;
+  const url = `https://montypaylive.fly.dev/configurationPage?domain=${session.shop}`;
 
   return json({ url });
 };
@@ -56,7 +56,7 @@ export default function Index() {
                 </BlockStack>
                 <InlineStack gap="300">
                   <fetcher.Form method="post">
-                    <button type="submit">Register</button>
+                    <Button submit>Register</Button>
                   </fetcher.Form>
                 </InlineStack>
               </BlockStack>

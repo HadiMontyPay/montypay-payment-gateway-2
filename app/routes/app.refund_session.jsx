@@ -1,9 +1,14 @@
 import { json } from "@remix-run/node";
 
-import { createRefundSession, getPaymentSession } from "../payments.repository";
+import {
+  createRefundSession,
+  getSessionByShop,
+  getPaymentSession,
+} from "../payments.repository";
 
 import CryptoJS from "crypto-js";
 import prisma from "../db";
+import PaymentsAppsClient, { PAYMENT, REFUND } from "../payments-apps.graphql";
 
 /**
  * Saves and starts a refund session.
@@ -24,49 +29,73 @@ import prisma from "../db";
 
 export const action = async ({ request }) => {
   // try {
-    const requestBody = await request.json();
+  const requestBody = await request.json();
 
-    // Create refund session hash and session
-    const refundSessionHash = createParams(requestBody);
-    const refundSession = await createRefundSession(refundSessionHash);
+  // Create refund session hash and session
+  const refundSessionHash = createParams(requestBody);
+  const refundSession = await createRefundSession(refundSessionHash);
 
-    // Check if refundSession was created successfully
-    if (!refundSession) {
-      throw new Response("A RefundSession couldn't be created.", { status: 500 });
-    }
+  // Check if refundSession was created successfully
+  if (!refundSession) {
+    throw new Response("A RefundSession couldn't be created.", { status: 500 });
+  }
 
-    // Make refund
-    const refundResult = await makeRefund(refundSessionHash.paymentId, refundSessionHash.amount);
+  // Make refund
+  const refundResult = await makeRefund(
+    refundSessionHash.paymentId,
+    refundSessionHash.amount,
+  );
 
-    // Check refund result
-    if (refundResult.status === "success" && refundResult.data?.result === "accepted") {
-      return json(refundSessionHash);
-    }
+  // Check refund result
+  if (
+    refundResult.status === "success" &&
+    refundResult.data?.result === "accepted"
+  ) {
+    const paymentSession = await getPaymentSession(refundSessionHash.paymentId);
+    const session = await getSessionByShop(paymentSession.shop);
+    const client = new PaymentsAppsClient(
+      paymentSession.shop,
+      session.accessToken,
+      REFUND,
+    );
 
-    // Refund not successful; throw error
-    throw new Response(refundResult.message || "Refund operation failed.", { status: 500 });
-  // } catch (error) {
-  //   // Handle unexpected errors
-  //   throw new Response(error.message || "An unexpected error occurred.", { status: 500 });
-  // }
+    const response = await client.resolveSession({
+      id: refundSession.id,
+      gid: refundSession.gid,
+    });
+    const userErrors = response?.userErrors || [];
+    if (userErrors.length > 0)
+      return json({ raiseBanner: true, errors: userErrors });
+
+    console.log("Response:", response);
+    return json(refundResult);
+  }
+
+  // Refund not successful; throw error
+  throw new Response(refundResult.message || "Refund operation failed.", {
+    status: 500,
+  });
 };
 
-const createParams = ({id, gid, amount, currency, payment_id, proposed_at}) => (
-  {
-    id,
-    gid,
-    amount,
-    currency,
-    paymentId: payment_id,
-    proposedAt: proposed_at,
-  }
-)
-
+const createParams = ({
+  id,
+  gid,
+  amount,
+  currency,
+  payment_id,
+  proposed_at,
+}) => ({
+  id,
+  gid,
+  amount,
+  currency,
+  paymentId: payment_id,
+  proposedAt: proposed_at,
+});
 
 // 1- call get transaction details by order ID
 // 2- we have the payment ID from the first step
 // 3- call the refund API based on the payment ID we get
-
 
 // const makeRefund = async (id, amount) => {
 
@@ -106,7 +135,6 @@ const createParams = ({id, gid, amount, currency, payment_id, proposed_at}) => (
 
 //   const transaction_details = await get_transaction_details.json();
 
-
 //   const to_md5_make_refund = transaction_details.payment_id + amount + configuration.merchantPassword;
 //   // merchantInfo.merchantPass;
 
@@ -130,11 +158,9 @@ const createParams = ({id, gid, amount, currency, payment_id, proposed_at}) => (
 
 //   const jsonResponse = await makeRefundRequest.json();
 
-
 //   return jsonResponse;
 
 // }
-
 
 const makeRefund = async (id, amount) => {
   try {
@@ -143,7 +169,11 @@ const makeRefund = async (id, amount) => {
       where: { id: id },
     });
     if (!paymentSession) {
-      return { status: "error", message: "Payment session not found", data: null };
+      return {
+        status: "error",
+        message: "Payment session not found",
+        data: null,
+      };
     }
 
     // Get the configuration to get merchant key and password
@@ -151,12 +181,18 @@ const makeRefund = async (id, amount) => {
       where: { shop: paymentSession.shop },
     });
     if (!configuration) {
-      return { status: "error", message: "Configuration not found", data: null };
+      return {
+        status: "error",
+        message: "Configuration not found",
+        data: null,
+      };
     }
 
     // Generate hash for getting transaction details
     const to_md5_get_details = id + configuration.merchantPassword;
-    const hash = CryptoJS.SHA1(CryptoJS.MD5(to_md5_get_details.toUpperCase()).toString());
+    const hash = CryptoJS.SHA1(
+      CryptoJS.MD5(to_md5_get_details.toUpperCase()).toString(),
+    );
     const resulthash = CryptoJS.enc.Hex.stringify(hash);
 
     const transactionDetailsRequest = {
@@ -166,21 +202,31 @@ const makeRefund = async (id, amount) => {
     };
 
     // Fetch transaction details
-    const transactionResponse = await fetch("https://checkout.montypay.com/api/v1/payment/status", {
-      method: "POST",
-      body: JSON.stringify(transactionDetailsRequest),
-      headers: { "Content-Type": "application/json" },
-    });
+    const transactionResponse = await fetch(
+      "https://checkout.montypay.com/api/v1/payment/status",
+      {
+        method: "POST",
+        body: JSON.stringify(transactionDetailsRequest),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
     const transactionDetails = await transactionResponse.json();
 
     // Check if the transaction details contain an error
     if (transactionDetails.errors) {
-      return { status: "error", message: "Transaction not found or invalid", data: transactionDetails.errors };
+      return {
+        status: "error",
+        message: "Transaction not found or invalid",
+        data: transactionDetails.errors,
+      };
     }
 
     // Generate hash for making a refund
-    const to_md5_make_refund = transactionDetails.payment_id + amount + configuration.merchantPassword;
-    const refundhash = CryptoJS.SHA1(CryptoJS.MD5(to_md5_make_refund.toUpperCase()).toString());
+    const to_md5_make_refund =
+      transactionDetails.payment_id + amount + configuration.merchantPassword;
+    const refundhash = CryptoJS.SHA1(
+      CryptoJS.MD5(to_md5_make_refund.toUpperCase()).toString(),
+    );
     const Refundresulthash = CryptoJS.enc.Hex.stringify(refundhash);
 
     const refundRequest = {
@@ -191,31 +237,51 @@ const makeRefund = async (id, amount) => {
     };
 
     // Make refund request
-    const refundResponse = await fetch("https://checkout.montypay.com/api/v1/payment/refund", {
-      method: "POST",
-      body: JSON.stringify(refundRequest),
-      headers: { "Content-Type": "application/json" },
-    });
+    const refundResponse = await fetch(
+      "https://checkout.montypay.com/api/v1/payment/refund",
+      {
+        method: "POST",
+        body: JSON.stringify(refundRequest),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
     const refundResult = await refundResponse.json();
 
     // Handle refund response
     if (refundResult.errors) {
-      const refundErrorMessage = refundResult.errors[0]?.error_message || refundResult.error_message || "Unknown refund error";
-      return { status: "error", message: refundErrorMessage, data: refundResult.errors };
+      const refundErrorMessage =
+        refundResult.errors[0]?.error_message ||
+        refundResult.error_message ||
+        "Unknown refund error";
+      return {
+        status: "error",
+        message: refundErrorMessage,
+        data: refundResult.errors,
+      };
     }
 
     if (refundResult.result === "accepted") {
-      return { status: "success", message: "Refund successful", data: refundResult };
+      return {
+        status: "success",
+        message: "Refund successful",
+        data: refundResult,
+      };
     }
-
-    return { status: "error", message: "Unknown refund status", data: refundResult };
+    return {
+      status: "error",
+      message: "Unknown refund status",
+      data: refundResult,
+      paymentSession: paymentSession,
+    };
   } catch (error) {
     // Catch any unexpected errors
-    return { status: "error", message: "An unexpected error occurred", data: error.message };
+    return {
+      status: "error",
+      message: "An unexpected error occurred",
+      data: error.message,
+    };
   }
 };
-
-
 
 // response if payment_id was not found:
 
@@ -267,6 +333,5 @@ const makeRefund = async (id, amount) => {
 //   "payment_id": "5573cca6-a3f7-11ef-a471-7aaaa02c7eba",
 //   "result": "accepted"
 // }
-
 
 // next steps: to try a new payment and make a successful refund for it

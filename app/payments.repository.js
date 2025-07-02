@@ -135,6 +135,13 @@ export const getSessionByShop = async (shop) => {
   return session;
 };
 
+export const deleteSessionByShop = async (shop) => {
+  const sessions = await prisma.session.deleteMany({
+    where: { shop: shop },
+  });
+  return sessions;
+};
+
 /**
  * Returns the configuration for the session if it exists, create it otherwise.
  */
