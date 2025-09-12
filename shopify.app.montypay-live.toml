@@ -2,14 +2,33 @@
 
 client_id = "95516f271f63cbefada64c8a3302c1ca"
 name = "MontyPay Payment Gateway"
-handle = "montypay-payment-gateway"
-application_url = "https://montypaylive.fly.dev"
+application_url = "https://shopify-config-page.fly.dev/"
 embedded = false
+handle = "montypay-payment-gateway"
 
 [build]
 automatically_update_urls_on_dev = false
 dev_store_url = "monty-pay-dev.myshopify.com"
 include_config_on_deploy = true
+
+[webhooks]
+api_version = "2024-04"
+
+  [[webhooks.subscriptions]]
+  uri = "https://montypaylive.fly.dev/webhooks/customers/data_request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://montypaylive.fly.dev/webhooks/customers/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://montypaylive.fly.dev/webhooks/shop/redact"
+  compliance_topics = [ "shop/redact" ]
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "https://montypaylive.fly.dev/webhooks/app/uninstalled"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
@@ -19,15 +38,10 @@ scopes = "write_payment_gateways,write_payment_sessions"
 redirect_urls = [
   "https://montypaylive.fly.dev/auth/callback",
   "https://montypaylive.fly.dev/auth/shopify/callback",
-  "https://montypaylive.fly.dev/api/auth/callback"
+  "https://montypaylive.fly.dev/api/auth/callback",
+  "https://shopify-config-page.fly.dev/auth",
+  "https://shopify-config-page.fly.dev/auth/callback"
 ]
-
-[webhooks]
-api_version = "2024-04"
-
-  [[webhooks.subscriptions]]
-  topics = [ "app/uninstalled" ]
-  uri = "https://montypaylive.fly.dev/webhooks/app/uninstalled"
 
 [pos]
 embedded = false
