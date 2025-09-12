@@ -1,18 +1,17 @@
 import { authenticate } from "../shopify.server";
-// import db from "../db.server";
-
-import { deleteSessionByShop } from "../payments.repository";
+import {
+  deleteSessionByShop,
+  deleteConfigurationByShop,
+} from "../payments.repository";
 
 export const action = async ({ request }) => {
-  const { shop, session, topic } = await authenticate.webhook(request);
+  const { shop, topic } = await authenticate.webhook(request);
 
   console.log(`Received ${topic} webhook for ${shop}`);
 
-  // Webhook requests can trigger multiple times and after an app has already been uninstalled.
-  // If this webhook already ran, the session may have been deleted previously.
-  if (session) {
-    await deleteSessionByShop(shop);
-  }
+  // Always delete session for the shop, even if `session` is undefined
+  await deleteSessionByShop(shop);
+  await deleteConfigurationByShop(shop);
 
   return new Response();
 };

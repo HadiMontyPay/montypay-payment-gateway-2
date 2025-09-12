@@ -1,18 +1,5 @@
 import { json, redirect } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
-import {
-  Button,
-  Checkbox,
-  FormLayout,
-  TextField,
-  BlockStack,
-  Card,
-  InlineStack,
-  Layout,
-  Link,
-  Page,
-  Text,
-} from "@shopify/polaris";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { useState } from "react";
 import styles from "./_index/styles.module.css";
@@ -26,18 +13,19 @@ import {
 
 export const loader = async ({ request }) => {
   // console.log("object");
-  const url = new URL(request.url);
-  const queryParams = Object.fromEntries(url.searchParams.entries());
+  // const url = new URL(request.url);
+  // const queryParams = Object.fromEntries(url.searchParams.entries());
 
-  const config = await getConfigurationByShop(
-    queryParams.shop || queryParams.domain,
-  );
-  const session = await getSessionByShop(
-    queryParams.shop || queryParams.domain,
-  );
-  const apiKey = process.env.SHOPIFY_API_KEY;
+  // const config = await getConfigurationByShop(
+  //   queryParams.shop || queryParams.domain,
+  // );
+  // const session = await getSessionByShop(
+  //   queryParams.shop || queryParams.domain,
+  // );
+  // const apiKey = process.env.SHOPIFY_API_KEY;
 
-  return json({ shopDomain: session.shop, apiKey: apiKey, config: config });
+  // return json({ shopDomain: session.shop, apiKey: apiKey, config: config });
+  return json({});
 };
 
 const verifyTestMode = async (tst) => {
@@ -161,7 +149,7 @@ export default function App() {
                   setTestMode(change);
                 }}
                 value={testMode.toString()}
-              /> */}
+              /> 
             <label className={styles.label}>
               <span className={styles.lbl}>Test Mode</span>
               <input
@@ -175,7 +163,7 @@ export default function App() {
                 }}
                 value={testMode}
               />
-            </label>
+            </label>*/}
             <button className={styles.button} type="submit">
               Submit
             </button>

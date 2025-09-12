@@ -4,13 +4,22 @@ import prisma from "./db";
  * Creates a PaymentSession entity with the provided data.
  */
 export const createPaymentSession = async (paymentSession) => {
-  const { amount, paymentMethod, customer } = paymentSession;
-  return await prisma.paymentSession.create({
-    data: {
-      ...paymentSession,
+  const { id, amount, paymentMethod, customer, ...rest } = paymentSession;
+
+  return await prisma.paymentSession.upsert({
+    where: { id }, // primary key must exist in your Prisma schema
+    update: {
       amount: parseFloat(amount),
       paymentMethod: JSON.stringify(paymentMethod),
       customer: JSON.stringify(customer),
+      ...rest,
+    },
+    create: {
+      id,
+      amount: parseFloat(amount),
+      paymentMethod: JSON.stringify(paymentMethod),
+      customer: JSON.stringify(customer),
+      ...rest,
     },
   });
 };
@@ -140,6 +149,12 @@ export const deleteSessionByShop = async (shop) => {
     where: { shop: shop },
   });
   return sessions;
+};
+export const deleteConfigurationByShop = async (shop) => {
+  const configurations = await prisma.configuration.deleteMany({
+    where: { shop: shop },
+  });
+  return configurations;
 };
 
 /**

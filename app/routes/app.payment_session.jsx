@@ -77,14 +77,16 @@ const createParams = (
   shop: shopDomain,
   cancelUrl: cancel_url,
 });
-
+function removeTrailingSlash(str) {
+  return str.endsWith("/") ? str.slice(0, -1) : str;
+}
 const buildRedirectUrl = async (request, paymentSession) => {
   try {
     // console.log(paymentSession);
-
+    const resultt = removeTrailingSlash(paymentSession.shop);
     const merchantInfo = await prisma.configuration.findUnique({
       where: {
-        shop: paymentSession.shop,
+        shop: resultt,
       },
     });
 
