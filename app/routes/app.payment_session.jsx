@@ -12,15 +12,35 @@ import prisma from "../db";
  * Saves and starts a payment session.
  * Redirects back to shop if payment session was created.
  */
+
+// function removeTrailingSlash(str) {
+//   return str.endsWith("/") ? str.slice(0, -1) : str;
+// }
+
 export const action = async ({ request }) => {
-  // try{
   const requestBody = await request.json();
+
+  // console.log("Request", requestBody);
 
   const shopDomain = request.headers.get("shopify-shop-domain");
 
+  // const shopConfig = await prisma.configuration.findFirst({
+  //   where: {
+  //     shop: removeTrailingSlash(shopDomain),
+  //   },
+  // });
+  // if (!shopConfig)
+  //   throw new Response("A Shop Configuration couldn't be found.", {
+  //     status: 500,
+  //   });
+
+  // if (shopConfig.without_CVV) {
+  // } else {
   const paymentSession = await createPaymentSession(
     createParams(requestBody, shopDomain),
   );
+
+  // console.log("paymentSession", paymentSession);
   // this is a test
 
   if (!paymentSession)
@@ -38,13 +58,6 @@ export const action = async ({ request }) => {
   throw new Response(result.message || "SALE operation failed.", {
     status: 500,
   });
-
-  // return result.data.redirect_url;
-  // return { redirect_url: await buildRedirectUrl(requestBody, paymentSession) };
-
-  // } catch (result) {
-  //   // Handle unexpected errors
-  //   throw new Response(result.message || "An unexpected error occurred.", { status: 500 });
   // }
 };
 
@@ -82,12 +95,9 @@ function removeTrailingSlash(str) {
 }
 const buildRedirectUrl = async (request, paymentSession) => {
   try {
-    // console.log(paymentSession);
     const resultt = removeTrailingSlash(paymentSession.shop);
     const merchantInfo = await prisma.configuration.findUnique({
-      where: {
-        shop: resultt,
-      },
+      where: { shop: resultt },
     });
 
     if (!merchantInfo) {
@@ -98,11 +108,22 @@ const buildRedirectUrl = async (request, paymentSession) => {
       };
     }
 
+    // Get all customer records for this shop + email
+    const customerRecords = await prisma.customerData.findMany({
+      where: {
+        shop: resultt,
+        email: request.customer.email,
+      },
+    });
+
+    const cardTokens = customerRecords.map((c) => c.token); // array of all tokens
+
+    if (customerRecords.length === 0) {
+      console.log("Customer Not Found");
+    }
+
     let merchant_key = merchantInfo.merchantKey;
     let merchant_password = merchantInfo.merchantPassword;
-    // if (merchantInfo) {
-    // const customer = JSON.parse(paymentSession.customer);
-    // const shopDomain = request.headers.get("shopify-shop-domain");
 
     const to_md5 =
       request.id +
@@ -110,17 +131,14 @@ const buildRedirectUrl = async (request, paymentSession) => {
       request.currency +
       request.kind +
       merchant_password;
-    // merchantInfo.merchantPass;
 
-    var hash = CryptoJS.SHA1(CryptoJS.MD5(to_md5.toUpperCase()).toString());
-    var result = CryptoJS.enc.Hex.stringify(hash);
-    // console.log("request.payment_method.data:", request.payment_method.data);
-    // console.log("paymentSession:", paymentSession);
-    const todoObject = {
-      // merchant_key: merchantInfo.merchantKey,
-      merchant_key: merchant_key,
+    const hash = CryptoJS.SHA1(CryptoJS.MD5(to_md5.toUpperCase()).toString());
+    const result = CryptoJS.enc.Hex.stringify(hash);
+
+    let todoObject = {
+      merchant_key,
       operation: "purchase",
-      cancel_url: paymentSession.cancelUrl,
+      cancel_url: paymentSession.cancel_url,
       success_url: "https://montypaylive.fly.dev/callback",
       hash: result,
       order: {
@@ -138,6 +156,20 @@ const buildRedirectUrl = async (request, paymentSession) => {
       },
     };
 
+    if (merchantInfo.with_CVV && cardTokens.length > 0) {
+      console.log(
+        "Merchant Has Tokenization with CVV, tokens found:",
+        cardTokens,
+      );
+      todoObject.req_token = true;
+      todoObject.card_token = cardTokens; // set array of all tokens
+    } else if (merchantInfo.with_CVV) {
+      console.log("Merchant Has Tokenization with CVV, no tokens found");
+      todoObject.req_token = true; // still request token if none exist
+    } else {
+      console.log("No Tokenization");
+    }
+
     const response = await fetch(
       "https://checkout.montypay.com/api/v1/session",
       {
@@ -146,9 +178,9 @@ const buildRedirectUrl = async (request, paymentSession) => {
         headers: { "Content-Type": "application/json" },
       },
     );
+
     const SaleResult = await response.json();
 
-    // Handle refund response
     if (SaleResult.errors) {
       const saleErrorMessage =
         SaleResult.errors[0]?.error_message ||
@@ -162,24 +194,13 @@ const buildRedirectUrl = async (request, paymentSession) => {
     }
 
     return { status: "success", message: "Sale success", data: SaleResult };
-
-    // return response;
-    // console.log(todoObject);
-    // const jsonResponse = await response.json();
-    // console.log("Json Response:",jsonResponse)
-
-    // return jsonResponse.redirect_url;
-
-    // return jsonResponse;
   } catch (error) {
-    // Catch any unexpected errors
     return {
       status: "error",
       message: "An unexpected error occurred",
       data: error.message,
     };
   }
-  // return `${request.url.slice(0, request.url.lastIndexOf("/"))}/payment_simulator/${id}`;
 };
 
 function stringToFloat(str, currency) {

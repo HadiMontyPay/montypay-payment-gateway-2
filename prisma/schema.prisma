@@ -1,13 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
   provider          = "mysql"
   url               = env("DATABASE_URL")
@@ -35,17 +29,20 @@ model Session {
 
 model Configuration {
   id               Int     @id @default(autoincrement())
-  session          Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId        String  @unique
   shop             String  @unique
   accountName      String?
   ready            Boolean @default(true)
   apiVersion       String  @default("unstable")
+  testMode         Boolean @default(true)
   merchantKey      String
   merchantPassword String
-  testMode         Boolean @default(true)
+  with_CVV         Boolean @default(false)
+  without_CVV      Boolean @default(false)
+  session          Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
+  @@index([sessionId], map: "configuration_session_id")
 }
 
 model PaymentSession {
@@ -60,48 +57,52 @@ model PaymentSession {
   paymentMethod String
   customer      String           @db.Text
   cancelUrl     String?
-  refunds       RefundSession[]
-  captures      CaptureSession[]
-  void          VoidSession?
   proposedAt    DateTime
   status        String?
+  captures      CaptureSession[]
+  refunds       RefundSession[]
+  void          VoidSession?
 }
 
 model RefundSession {
   id         String         @id
   gid        String
-  payment    PaymentSession @relation(fields: [paymentId], references: [id])
   paymentId  String
   amount     Decimal
   currency   String
   proposedAt DateTime
   status     String?
+  payment    PaymentSession @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId], map: "RefundSession_paymentId_fkey")
 }
 
 model CaptureSession {
   id         String         @id
   gid        String
-  payment    PaymentSession @relation(fields: [paymentId], references: [id])
   paymentId  String
   amount     Decimal
   currency   String
   proposedAt DateTime
   status     String?
+  payment    PaymentSession @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId], map: "CaptureSession_paymentId_fkey")
 }
 
 model VoidSession {
   id         String         @id
   gid        String
-  payment    PaymentSession @relation(fields: [paymentId], references: [id])
   paymentId  String         @unique
   proposedAt DateTime
   status     String?
+  payment    PaymentSession @relation(fields: [paymentId], references: [id])
 }
 
-// model CustomerData {
-//   id    String @id
-//   shop  String
-//   email String
-//   token String
-//   phone String
-// }
+model CustomerData {
+  id    String  @id @default(uuid())
+  shop  String
+  email String
+  token String
+  phone String?
+}

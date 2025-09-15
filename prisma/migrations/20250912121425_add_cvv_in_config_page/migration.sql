@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `Configuration` ADD COLUMN `with_CVV` BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN `without_CVV` BOOLEAN NOT NULL DEFAULT false;
