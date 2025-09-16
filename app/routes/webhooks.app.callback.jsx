@@ -45,7 +45,51 @@ export const action = async ({ request }) => {
       return json({ raiseBanner: true, errors: userErrors });
 
     return redirect(response.paymentSession.nextAction.context.redirectUrl);
-  } else if (body.type == "sale" && body.status == "success") {
+  } else if (
+    body.type == "sale" &&
+    body.status == "success" &&
+    body.card_token
+  ) {
+    console.log("Sale Success With Card Token");
+
+    const existingCustomer = await prisma.customerData.findFirst({
+      where: {
+        shop: paymentSession.shop,
+        email: body.customer_email,
+        token: body.card_token, // check if the exact token already exists
+      },
+    });
+
+    if (!existingCustomer) {
+      // Token is different, create a new record
+      const newCustomer = await prisma.customerData.create({
+        data: {
+          shop: paymentSession.shop,
+          email: body.customer_email,
+          token: body.card_token,
+          phone: body.customer_phone || "",
+        },
+      });
+      console.log("New customer entry created with a different token");
+    } else {
+      console.log("Token already exists, no action needed");
+    }
+
+    const response = await client.resolveSession({
+      id: paymentSession.id,
+      gid: paymentSession.gid,
+    });
+    const userErrors = response?.userErrors || [];
+    if (userErrors.length > 0)
+      return json({ raiseBanner: true, errors: userErrors });
+
+    return redirect(response.paymentSession.nextAction.context.redirectUrl);
+  } else if (
+    body.type == "sale" &&
+    body.status == "success" &&
+    !body.card_token
+  ) {
+    console.log("Sale Success Without Card Token");
     const response = await client.resolveSession({
       id: paymentSession.id,
       gid: paymentSession.gid,
@@ -84,21 +128,6 @@ export const action = async ({ request }) => {
     } else {
       console.log("Token already exists, no action needed");
     }
-
-    // const customer = await prisma.customerData.upsert({
-    //   where: {
-    //     shop_email: {
-    //       shop: paymentSession.shop,
-    //       email: body.customer_email,
-    //     },
-    //   },
-    //   update: {},
-    //   create: {
-    //     shop: paymentSession.shop,
-    //     email: body.customer_email,
-    //     token: body.card_token,
-    //   },
-    // });
   }
 
   return new Response(JSON.stringify(body), {
