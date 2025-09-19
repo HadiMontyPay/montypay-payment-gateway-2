@@ -5,6 +5,9 @@ api_version = "2024-04"
 [[extensions]]
 name = "MontyPay Payment Gateway"
 handle = "montypay-payment-extension"
+
+uid = "662e40e4-c89d-7b93-c8c4-cb596a8eeae1494b230e"
+
 type = "payments_extension"
 
 
