@@ -100,9 +100,13 @@ model VoidSession {
 }
 
 model CustomerData {
-  id    String  @id @default(uuid())
-  shop  String
-  email String
-  token String
-  phone String?
+  id                      String  @id @default(uuid())
+  shop                    String
+  email                   String
+  token                   String
+  phone                   String?
+  recurring_init_trans_id String?
+  recurring_token         String?
+  save_card               Boolean @default(false)
+  card                    String?
 }

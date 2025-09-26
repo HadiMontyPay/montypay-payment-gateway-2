@@ -20,45 +20,51 @@ import prisma from "../db";
 export const action = async ({ request }) => {
   const requestBody = await request.json();
 
-  // console.log("Request", requestBody);
+  console.log("Request", requestBody);
 
   const shopDomain = request.headers.get("shopify-shop-domain");
+  const merchantWithRecurring = await prisma.configuration.findFirst({
+    where: {
+      shop: shopDomain,
+      without_CVV: true,
+    },
+  });
 
-  // const shopConfig = await prisma.configuration.findFirst({
-  //   where: {
-  //     shop: removeTrailingSlash(shopDomain),
-  //   },
-  // });
-  // if (!shopConfig)
-  //   throw new Response("A Shop Configuration couldn't be found.", {
-  //     status: 500,
-  //   });
+  if (merchantWithRecurring) {
+    // console.log("This merchant has tokenization");
+    const paymentSession = await createPaymentSession(
+      createParams(requestBody, shopDomain),
+    );
 
-  // if (shopConfig.without_CVV) {
-  // } else {
-  const paymentSession = await createPaymentSession(
-    createParams(requestBody, shopDomain),
-  );
+    if (!paymentSession)
+      throw new Response("A PaymentSession couldn't be created.", {
+        status: 500,
+      });
+    return {
+      redirect_url: `https://shopify-config-page.fly.dev/tokenization?shop=${shopDomain}&payment_session_id=${paymentSession.id}`,
+      // redirect_url: `http://localhost:3000/tokenization?shop=${shopDomain}&payment_session_id=${paymentSession.id}`,
+    };
+  } else {
+    const paymentSession = await createPaymentSession(
+      createParams(requestBody, shopDomain),
+    );
 
-  // console.log("paymentSession", paymentSession);
-  // this is a test
+    if (!paymentSession)
+      throw new Response("A PaymentSession couldn't be created.", {
+        status: 500,
+      });
 
-  if (!paymentSession)
-    throw new Response("A PaymentSession couldn't be created.", {
+    const result = await buildRedirectUrl(requestBody, paymentSession);
+
+    // Check refund result
+    if (result.status === "success") {
+      return { redirect_url: result.data.redirect_url };
+    }
+
+    throw new Response(result.message || "SALE operation failed.", {
       status: 500,
     });
-
-  const result = await buildRedirectUrl(requestBody, paymentSession);
-
-  // Check refund result
-  if (result.status === "success") {
-    return { redirect_url: result.data.redirect_url };
   }
-
-  throw new Response(result.message || "SALE operation failed.", {
-    status: 500,
-  });
-  // }
 };
 
 const createParams = (
@@ -116,7 +122,9 @@ const buildRedirectUrl = async (request, paymentSession) => {
       },
     });
 
-    const cardTokens = customerRecords.map((c) => c.token); // array of all tokens
+    const cardTokens = customerRecords
+      .map((c) => c.token)
+      .filter((token) => token && token.trim() !== ""); // array of all tokens
 
     if (customerRecords.length === 0) {
       console.log("Customer Not Found");
@@ -138,7 +146,7 @@ const buildRedirectUrl = async (request, paymentSession) => {
     let todoObject = {
       merchant_key,
       operation: "purchase",
-      cancel_url: paymentSession.cancel_url,
+      cancel_url: paymentSession.cancelUrl,
       success_url: "https://montypaylive.fly.dev/callback",
       hash: result,
       order: {
@@ -153,6 +161,14 @@ const buildRedirectUrl = async (request, paymentSession) => {
           " " +
           request.customer.billing_address.family_name,
         email: request.customer.email,
+      },
+      billing_address: {
+        country: request.customer.billing_address.country_code,
+        state: request.customer.billing_address.province,
+        city: request.customer.billing_address.city,
+        address: `${request.customer.billing_address.line1}, ${request.customer.billing_address.line2}`,
+        zip: request.customer.billing_address.postal_code,
+        phone: request.customer.billing_address.phone_number,
       },
     };
 
