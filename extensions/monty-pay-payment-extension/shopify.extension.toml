@@ -22,7 +22,7 @@ supports_oversell_protection = false
 supported_countries = ["LB", "JO", "NG", "BH", "QA", "US", "AE", "ID", "FR", "DE", "GB", "SA", "KW"]
 # List payment method names that your payment extension will support. Learn more:
 # https://github.com/activemerchant/payment_icons/blob/master/db/payment_icons.yml
-supported_payment_methods = ["visa", "master", "american_express","kfast", "knet", "mada","benefit"]
+supported_payment_methods = ["visa", "master", "american_express","kfast", "knet", "mada","benefit","bri","bni","permata","cimb","danamononline","bsi","maybank","jcb"]
 supports_3ds = true
 supports_installments = false
 supports_deferred_payments = false

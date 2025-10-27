@@ -82,11 +82,11 @@ export const action = async ({ request }) => {
 
   // ---- SALE FAIL ----
   if (type === "sale" && status === "fail") {
-    const response = await client.pendSession({
+    const response = await client.rejectSession({
       id: paymentSession.id,
       gid: paymentSession.gid,
     });
-    return handleSessionResponse(response);
+    // return handleSessionResponse(response);
   }
 
   // ---- RECURRING CUSTOMER ----
