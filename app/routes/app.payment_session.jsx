@@ -164,10 +164,10 @@ const buildRedirectUrl = async (request, paymentSession) => {
       },
       billing_address: {
         country: request.customer.billing_address.country_code,
-        state: request.customer.billing_address.province,
+        // state: request.customer.billing_address.province,
         city: request.customer.billing_address.city,
         address: `${request.customer.billing_address.line1}, ${request.customer.billing_address.line2}`,
-        zip: request.customer.billing_address.postal_code,
+        // zip: request.customer.billing_address.postal_code,
         phone: request.customer.billing_address.phone_number,
       },
     };
