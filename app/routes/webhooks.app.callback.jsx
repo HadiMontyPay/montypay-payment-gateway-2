@@ -81,13 +81,13 @@ export const action = async ({ request }) => {
   );
 
   // ---- SALE FAIL ----
-  if (type === "sale" && status === "fail") {
-    const response = await client.rejectSession({
-      id: paymentSession.id,
-      gid: paymentSession.gid,
-    });
-    // return handleSessionResponse(response);
-  }
+  // if (type === "sale" && status === "fail") {
+  //   const response = await client.rejectSession({
+  //     id: paymentSession.id,
+  //     gid: paymentSession.gid,
+  //   });
+  //   // return handleSessionResponse(response);
+  // }
 
   // ---- RECURRING CUSTOMER ----
   if (body.recurring_init_trans_id && body.recurring_token) {
